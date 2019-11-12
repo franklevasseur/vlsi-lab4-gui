@@ -1,11 +1,38 @@
 #!/home/francois/anaconda3/envs/vlsi-lab4/bin/python
 
 from flask import Flask, send_from_directory, request, make_response, abort, jsonify
+import serial
+import serial.tools.list_ports
 import os
+
+BAUD_RATE = 9600
 
 print("##########################################################")
 print("##########################################################")
-print("##################### server started #####################")
+print("##################### initializing... ####################")
+print("##########################################################")
+print("########################################################## \n")
+
+print("##########################################################")
+print("################## available ports are : #################")
+print("########################################################## \n")
+
+all_available_ports = serial.tools.list_ports.comports()
+chosen_port = None
+for port, desc, hwid in sorted(all_available_ports):
+    if desc.startswith("FT232R"):
+        print(" - {}: {} [{}]       << this one\n".format(port, desc, hwid))
+        chosen_port = serial.Serial(port, baudrate=BAUD_RATE)
+        break
+    else:
+        print(" - {}: {} [{}]\n".format(port, desc, hwid))
+
+if chosen_port is None:
+    print("\nNo UART connected...\n")
+
+print("##########################################################")
+print("##########################################################")
+print("##################### server starting ####################")
 print("##########################################################")
 print("########################################################## \n")
 
