@@ -6,9 +6,6 @@ import serial.tools.list_ports
 
 import os
 
-#variable set up port serial
-BAUD_RATE = 9600
-
 print("##########################################################")
 print("##########################################################")
 print("##################### initializing... ####################")
@@ -20,21 +17,22 @@ print("################## available ports are : #################")
 print("########################################################## \n")
 
 all_available_ports = serial.tools.list_ports.comports()
+indexes = [i for i in range(len(all_available_ports))]
 
 print("Available ports")
 chosen_port = None
-for port, desc, hwid in sorted(all_available_ports):
-    if desc.startswith("FT232R"):
-        print(" - {}: {} [{}]       << this one\n".format(port, desc, hwid))
-        #chosen_port = serial.Serial(port, baudrate=BAUD_RATE)
-        break
-    else:
-        print(" - {}: {} [{}]\n".format(port, desc, hwid))
+for i, (port, desc, hwid) in zip(indexes, sorted(all_available_ports)):
+    print("#{}) {}: {} [{}]".format(i, port, desc, hwid))
 
-print("Choose from available ports")
-user_port  = input()
-if (len(user_port) >= 4):
-    chosen_port = serial.Serial(user_port.upper(), baudrate=BAUD_RATE)
+print("Choose from available ports: {}".format(indexes))
+user_port = input()
+chosen_port_object = all_available_ports[int(user_port)]
+
+print("Choose baud rate : ")
+baudrate = input()
+
+print("Chosen port is : {}".format(chosen_port_object[0]))
+chosen_port = serial.Serial(chosen_port_object[0], baudrate=int(baudrate))
 
 if chosen_port is None:
     print("\nNo UART connected...\n")
@@ -44,8 +42,6 @@ else :
         print("Device connected")
     else:
         print("Device failed to connect")
-    
-
 
 print("##########################################################")
 print("##########################################################")
@@ -68,9 +64,11 @@ def hello_world():
 def serve_static(filename):
     return send_from_directory(static_sources_dir, filename)
 
+
 @app.route('/debug', methods=['GET'])
 def debug():
     return 'hello ;)'
+
 
 @app.route('/pattern', methods=['POST'])
 def post_pattern():
@@ -93,9 +91,7 @@ def post_pattern():
                     t = chr(int(str1, 2))
                     chosen_port.write(str.encode(t))
                     msgCount = msgCount + 1
-                    counter = 0
-                
-
+                    counter = 0                
 
         print("\n")
         print("pattern : \n")
