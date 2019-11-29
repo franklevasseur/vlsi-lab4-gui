@@ -78,8 +78,10 @@ def post_pattern():
     if request.is_json:
         
         pattern = request.get_json()
+        
         counter = 0
         buffer = [0,0,0,0,0,0,0,0]
+        msgArray = []
         msgCount = 0
         for count in range(len(pattern)):
             if (counter < 8):
@@ -89,13 +91,18 @@ def post_pattern():
                     print(str(msgCount) + " - " + str(buffer))
                     str1 = ''.join(str(e) for e in buffer)
                     print("     Binary - " + str(str1))
-                    print("     serial write value " + str("0x%x" % int(str1, 2)))
-                    t = chr(int(str1, 2))
-                    chosen_port.write(str.encode(t))
+                    print("     serial write value " + str(hex(int(str1, 2))))
+                    t = int(str1, 2)
+                    msgArray.append(t)
                     msgCount = msgCount + 1
                     counter = 0
-                
 
+        #permet d'envoyer les messages à l'envers pour accomoder la reconstruction
+        for i in reversed(msgArray):
+            packet = bytearray()
+            print("     serial packet value " + str(i))
+            packet.append(i)
+            chosen_port.write(packet)
 
         print("\n")
         print("pattern : \n")
