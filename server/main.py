@@ -21,7 +21,7 @@ indexes = [i for i in range(len(all_available_ports))]
 
 print("Available ports")
 chosen_port = None
-for i, (port, desc, hwid) in zip(indexes, sorted(all_available_ports)):
+for i, (port, desc, hwid) in enumerate(all_available_ports):
     print("#{}) {}: {} [{}]".format(i, port, desc, hwid))
 
 print("Choose from available ports: {}".format(indexes))
@@ -77,34 +77,27 @@ def post_pattern():
         
         pattern = request.get_json()
         
-        counter = 0
-        buffer = [0,0,0,0,0,0,0,0]
+        positionInByte = 0
+        nextByte = 0x0
         msgArray = []
-        msgCount = 0
-        for count in range(len(pattern)):
-            if (counter < 8):
-                buffer[counter] = pattern[count]
-                counter = counter + 1
-                if (counter > 7):
-                    print(str(msgCount) + " - " + str(buffer))
-                    str1 = ''.join(str(e) for e in buffer)
-                    print("     Binary - " + str(str1))
-                    print("     serial write value " + str(hex(int(str1, 2))))
-                    t = int(str1, 2)
-                    msgArray.append(t)
-                    msgCount = msgCount + 1
-                    counter = 0
+        for positionInPattern in range(len(pattern)):
+            if (positionInByte < 8):
+                nextByte += (2 ** (7 - positionInByte)) * pattern[positionInPattern]
+                positionInByte = positionInByte + 1
+                if (positionInByte > 7):
+                    msgArray.append(nextByte)
+                    positionInByte = 0
+                    nextByte = 0x0
 
-        #permet d'envoyer les messages à l'envers pour accomoder la reconstruction
-        for i in reversed(msgArray):
-            packet = bytearray()
-            print("     serial packet value " + str(i))
-            packet.append(i)
-            chosen_port.write(packet)
+        msgArray.append(0x0)
+        bytesToSend = bytearray(msgArray)
 
         print("\n")
-        print("pattern : \n")
-        print(pattern)
+        print("actual byte sent: \n")
+        print(''.join('{:02x}'.format(x) for x in bytesToSend))
+
+        chosen_port.write(bytesToSend)
+
         print(len(pattern))
         print("\n")
 
